@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Enums;
+
+use LaravelApiErrors\Contracts\ApiErrorCode;
+use LaravelApiErrors\Enums\InteractsWithApiError;
+
+/**
+ * Application-specific error codes.
+ *
+ * Register this enum in config/api-errors.php:
+ *   'extra_enums' => [
+ *       \App\Enums\AppErrorCode::class,
+ *   ],
+ */
+enum AppErrorCode: string implements ApiErrorCode
+{
+    use InteractsWithApiError;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Billing Domain
+    |--------------------------------------------------------------------------
+    */
+    case BILLING_CARD_DECLINED     = 'BILLING_CARD_DECLINED';
+    case BILLING_SUBSCRIPTION_EXPIRED = 'BILLING_SUBSCRIPTION_EXPIRED';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Users Domain
+    |--------------------------------------------------------------------------
+    */
+    case USER_EMAIL_TAKEN          = 'USER_EMAIL_TAKEN';
+    case USER_PROFILE_INCOMPLETE   = 'USER_PROFILE_INCOMPLETE';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Contract implementations
+    |--------------------------------------------------------------------------
+    */
+
+    public function code(): string
+    {
+        return $this->value;
+    }
+
+    public function message(): string
+    {
+        return match ($this) {
+            self::BILLING_CARD_DECLINED        => 'The credit card was declined.',
+            self::BILLING_SUBSCRIPTION_EXPIRED => 'Your subscription has expired.',
+            self::USER_EMAIL_TAKEN             => 'This email address is already in use.',
+            self::USER_PROFILE_INCOMPLETE      => 'Your profile is incomplete.',
+        };
+    }
+
+    public function httpStatus(): int
+    {
+        return match ($this) {
+            self::BILLING_CARD_DECLINED        => 402,
+            self::BILLING_SUBSCRIPTION_EXPIRED => 403,
+            self::USER_EMAIL_TAKEN             => 409,
+            self::USER_PROFILE_INCOMPLETE      => 422,
+        };
+    }
+
+    public function domain(): string
+    {
+        return match ($this) {
+            self::BILLING_CARD_DECLINED,
+            self::BILLING_SUBSCRIPTION_EXPIRED => 'BILLING',
+            self::USER_EMAIL_TAKEN,
+            self::USER_PROFILE_INCOMPLETE      => 'USER',
+        };
+    }
+
+    public function severity(): string
+    {
+        return match ($this) {
+            self::BILLING_CARD_DECLINED => 'warning',
+            default                    => 'info',
+        };
+    }
+}
